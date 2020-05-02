@@ -1,0 +1,243 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Untitled",
+      "provenance": [],
+      "authorship_tag": "ABX9TyOt9Bl9OHu53PE0Ev8vJ9p0",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/mordor-ai/M1MIASHS_projet_twitter/blob/master/load_and%20_save_from_collab\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "DaupgPzyJMr2",
+        "colab_type": "code",
+        "outputId": "ed0b368c-fb58-4db9-901e-be39dee3ad2c",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 156
+        }
+      },
+      "source": [
+        "!pip install python-igraph"
+      ],
+      "execution_count": 0,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Collecting python-igraph\n",
+            "\u001b[?25l  Downloading https://files.pythonhosted.org/packages/8b/74/24a1afbf3abaf1d5f393b668192888d04091d1a6d106319661cd4af05406/python_igraph-0.8.2-cp36-cp36m-manylinux2010_x86_64.whl (3.2MB)\n",
+            "\u001b[K     |████████████████████████████████| 3.2MB 2.8MB/s \n",
+            "\u001b[?25hCollecting texttable>=1.6.2\n",
+            "  Downloading https://files.pythonhosted.org/packages/ec/b1/8a1c659ce288bf771d5b1c7cae318ada466f73bd0e16df8d86f27a2a3ee7/texttable-1.6.2-py2.py3-none-any.whl\n",
+            "Installing collected packages: texttable, python-igraph\n",
+            "Successfully installed python-igraph-0.8.2 texttable-1.6.2\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "PHJXu6C3JI1i",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 476
+        },
+        "outputId": "5795d307-1bc9-48fb-e5b3-17e8a5a8976e"
+      },
+      "source": [
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "import igraph\n",
+        "import datetime\n",
+        "\n",
+        "\n",
+        "\n",
+        "def human_format(num):\n",
+        "    magnitude = 0\n",
+        "    while abs(num) >= 1000:\n",
+        "        magnitude += 1\n",
+        "        num /= 1000.0\n",
+        "    # add more suffixes if you need them\n",
+        "    return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])\n",
+        "\n",
+        "\n",
+        "n_rows = 10000000\n",
+        "compressed = True\n",
+        "tstart = None\n",
+        "tend = None\n",
+        "\n",
+        "\n",
+        "def start_time():\n",
+        "    global tstart\n",
+        "    tstart = datetime.datetime.now()\n",
+        "\n",
+        "\n",
+        "def get_delta():\n",
+        "    global tstart\n",
+        "    tend = datetime.datetime.now()\n",
+        "    return tend - tstart\n",
+        "\n",
+        "\n",
+        "print('====== Profiling results =======')\n",
+        "start_time()\n",
+        "# load the original graph csv\n",
+        "df_edges = pd.read_csv(\n",
+        "    \"./files/twitter_100M.csv\",\n",
+        "    header='infer',\n",
+        "    sep=' ',\n",
+        "    low_memory=False#,\n",
+        "   # dtype={'source': np.int32, 'target': np.int32}\n",
+        "     #,nrows=n_rows\n",
+        ")\n",
+        "# on renome les colonnes\n",
+        "df_edges.columns = ['source', 'target']\n",
+        "delta1 = get_delta()\n",
+        "print('Time required to load edges: %(delta1)s' % locals())\n",
+        "start_time()\n",
+        "\n",
+        "# on charge tout les noeuds\n",
+        "df_nodes = pd.read_csv(\n",
+        "    \"./files/twitter-2010-ids.csv\",\n",
+        "    header='infer',\n",
+        "    sep=',',\n",
+        "    low_memory=False#,\n",
+        "   # dtype={'node_id': np.int32, 'twitter_id': np.int32}\n",
+        "    #, nrows = n_rows\n",
+        "    #,index_col='node_id'\n",
+        ")\n",
+        "delta2 = get_delta()\n",
+        "\n",
+        "print(\"Dataframe loaded with \" + str(len(df_edges)) + \"rows.\")\n",
+        "print('Time required to load nodes: %(delta2)s' % locals())\n",
+        "print(df_edges.head())\n",
+        "print(df_nodes.head())\n",
+        "#print(df_nodes.to_dict('records'))\n",
+        "#print(df_edges.to_dict('records'))\n",
+        "print(\"Now loading graph\")\n",
+        "start_time()\n",
+        "# chargement du graphe\n",
+        "g = igraph.Graph.DictList(df_nodes.to_dict('records')\n",
+        "                          , df_edges.to_dict('records')\n",
+        "                          , directed=True\n",
+        "                          , vertex_name_attr='node_id'\n",
+        "                          , edge_foreign_keys=('source', 'target')\n",
+        "                          #, iterative=False\n",
+        "                          )\n",
+        "delta2 = get_delta()\n",
+        "print(\"graph loaded\")\n",
+        "print('Time required to load graph: %(delta2)s' % locals())\n",
+        "print(\"loading graph summary\")\n",
+        "\n",
+        "start_time()\n",
+        "igraph.summary(g)\n",
+        "delta1 = get_delta()\n",
+        "print('Time required to get summary graph: %(delta1)s' % locals())\n",
+        "\n",
+        "# start_time()\n",
+        "# degrees_in = g.degree(mode=\"in\")\n",
+        "# max_deg_in = max(degrees_in)\n",
+        "# print(max_deg_in)\n",
+        "# df_degree_in = [g.vs[idx].attributes() for idx, eb in enumerate(degrees_in) if eb == max_deg_in]\n",
+        "# print(df_degree_in)\n",
+        "# print(\" twitter id  having max degree IN: \", df_degree_in)\n",
+        "# delta1 = get_delta()\n",
+        "# print('Time required to get  graph degree in : %(delta1)s' % locals())\n",
+        "#\n",
+        "#\n",
+        "# start_time()\n",
+        "# degrees_out = g.degree(mode=\"out\")\n",
+        "# max_deg_out = max(degrees_out)\n",
+        "# print(max_deg_out)\n",
+        "# df_degree_out = [g.vs[idx].attributes() for idx, eb in enumerate(degrees_out) if eb == max_deg_out]\n",
+        "# print(df_degree_out)\n",
+        "# print(\" twitter id  having max degree OUT: \", df_degree_out)\n",
+        "# delta1 = get_delta()\n",
+        "# print('Time required to get  graph degree out : %(delta1)s' % locals())\n",
+        "\n",
+        "\n",
+        "\n",
+        "\n",
+        "file_name: str = './files/twitter_' + human_format(n_rows) + '_pickle'+  ('z' if compressed else '')\n",
+        "print(\"now saving graph to \", file_name)\n",
+        "start_time()\n",
+        "if compressed:\n",
+        "    g.write_picklez(file_name)\n",
+        "else:\n",
+        "    g.write_pickle(file_name)\n",
+        "print(\"graph saved\")\n",
+        "delta4 = get_delta()\n",
+        "print(\"Time required to save pickle file: %(delta4)s\" % locals())\n",
+        "print(\"====== End of program =======\")\n",
+        "\n"
+      ],
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "====== Profiling results =======\n",
+            "Time required to load edges: 0:00:00.368997\n",
+            "Dataframe loaded with 2086819rows.\n",
+            "Time required to load nodes: 0:00:00.381494\n",
+            "   source  target\n",
+            "0       3     2.0\n",
+            "1       2     3.0\n",
+            "2       5     4.0\n",
+            "3       4     5.0\n",
+            "4       5     6.0\n",
+            "   node_id  twitter_id\n",
+            "0        0  56862681.0\n",
+            "1        1  15767971.0\n",
+            "2        2  22055653.0\n",
+            "3        3  23219170.0\n",
+            "4        4  24503384.0\n",
+            "Now loading graph\n",
+            "graph loaded\n",
+            "Time required to load graph: 0:00:22.360405\n",
+            "loading graph summary\n",
+            "IGRAPH D--- 3149737 2086819 -- \n",
+            "+ attr: node_id (v), twitter_id (v), source (e), target (e)\n",
+            "Time required to get summary graph: 0:00:00.000178\n",
+            "now saving graph to  ./files/twitter_10M_picklez\n",
+            "graph saved\n",
+            "Time required to save pickle file: 0:01:12.421214\n",
+            "====== End of program =======\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "nfLYoF4SJMUD",
+        "colab_type": "text"
+      },
+      "source": [
+        ""
+      ]
+    }
+  ]
+}
