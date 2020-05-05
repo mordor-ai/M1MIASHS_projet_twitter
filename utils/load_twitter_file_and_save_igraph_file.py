@@ -13,7 +13,7 @@ def human_format(num):
     return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
 
 
-n_rows = 100000000
+n_rows = 10000000
 compressed=  True
 tstart = None
 tend = None
