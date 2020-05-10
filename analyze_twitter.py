@@ -1,36 +1,25 @@
 import igraph
-import twint
-import datetime
+import numpy as np
+from utils import utils as u
 from utils import metrics as gm
 
-def start_time():
-    global tstart
-    tstart = datetime.datetime.now()
 
-
-def get_delta():
-    global tstart
-    tend = datetime.datetime.now()
-    return tend - tstart
 
 print('====== Profiling results =======')
 
-start_time()
-
-g = igraph.Graph.Read_Picklez(fname= "./files/twitter_100K_picklez")
-
-delta1 = get_delta()
-print('Time required to load graph: %(delta1)s' % locals())
-
-start_time()
+u.start_time()
+g = igraph.Graph.Read_Picklez(fname= "./files/twitter_1K_picklez")
+u.print_delta("load graph")
+print('graph is directed ? : ',g.is_directed())
+u.start_time()
 gm.summary(g)
-delta1 = get_delta()
-print('Time required to get summary graph: %(delta1)s' % locals())
-start_time()
+u.print_delta("get summary graph")
+
+u.start_time()
 gm.report(g)
 
-delta1 = get_delta()
-print('Time required to get report graph: %(delta1)s' % locals())
+u.print_delta("get report graph")
+
 #gm.degree_distribution_plot(g,'dg_distri',loglog=False)
 
 #gm.plot_degree_distribution(g)
@@ -40,43 +29,40 @@ print('Time required to get report graph: %(delta1)s' % locals())
 
 #print(g.degree_distribution().bins())
 
-
-start_time()
-geant  = gm.in_giant(g)
-print(geant.vcount())
+# composante géante
+print("==============GIANT ===============")
+cl = g.components()
+cl = g.as_undirected().components()
+cl_sizes = cl.sizes()
+#print ( 'sizes', len(cl_sizes) )
+giant_component_index = cl_sizes.index(max(cl_sizes))
+geant = cl.giant()
+g.vs["component_id"] = cl.membership
+# for i  in cl_sizes:
+#       sub_g= g.vs[component_id_eq=i]
+#       sub_degree = sub_g.vs.degree()  # vs.degree (mode=igraph.IN)
+#       sub_max_deg = max(sub_degree)
+#       print('found max degree : ', sub_max_deg, '  for sub ')
+#       df_sub_degree = [sub_g.vs[idx] for idx, eb in enumerate(sub_degree) if eb == sub_max_deg]
+#       g.vs[df_sub_degree[0]["name"]]["is_max_component"] = 1
+#geant = gm.in_giant(g)
+u.start_time()
+gm.summary(geant)
+u.print_delta("get giant component")
+#geant=  g
+print(" GIANT components :", geant.vcount())
 gm.global_metrics(geant)
-delta1 = get_delta()
-print('Time required to get giant compoent : %(delta1)s' % locals())
+
+gm.get_max_vertex(g,igraph.ALL)
+gm.get_max_vertex(g,igraph.IN)
+gm.get_max_vertex(g,igraph.OUT)
 
 
+gm.viz_graph(g,igraph.ALL,"graph_complete.pdf","drl",6)
+gm.viz_graph(geant,igraph.ALL,"graph_giant.pdf","kk",6)
 
-start_time()
-degree = geant.vs.select(_degree = geant.maxdegree())["twitter_id"]
-print(degree[0])
-delta1 = get_delta()
-print('Time required to get most import twitter acount : %(delta1)s' % locals())
+cfg = g.clus
+cluster_fast_greedy(as.undirected(net))
+plot(cfg, as.undirected(net))
 
-#gm.global_metrics(g)
-#gm.local_metrics(g)
-
-start_time()
-
-c = twint.Config()
-c.User_id = degree[0]
-c.Limit = 20
-c.Pandas = True
-#c.Hide_output = True
-try:
-    twint.run.Lookup(c)
-    User_df = twint.storage.panda.User_df
-    print(User_df.head())
-except:
-    print("twitter id not found  for id :" % degree[0])
-
-delta1 = get_delta()
-print('Time required to get  twitter acount onto twitter: %(delta1)s' % locals())
-#start_time()
-
-#deg_in = g.vs.degree(type="in")
-#max_deg_in =  max(deg_in)
-#list_deg_in = [g.es[idx].tuple for idx, e_di in enumerate(deg_in) if e_di == max_deg_in]
+print(" =========  End of Program ===")

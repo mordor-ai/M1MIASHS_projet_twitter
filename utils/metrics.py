@@ -9,6 +9,13 @@ This module contains the metrics for graphs.
 import matplotlib.pyplot as plt
 import seaborn as sns
 from igraph import *
+import numpy as np
+from utils import utils as u
+from collections import Counter
+from operator import itemgetter
+
+folder_img: str = "./files/img/"
+img_suffix: str = ".png"
 
 
 def efficiency(g: Graph, initial=0, removed=0):
@@ -55,7 +62,7 @@ def plot_degree_distribution(g: Graph):
 
 def degree_distribution_plot(g: Graph, filename='degree_distribution', loglog=True, marker='.'):
     import pylab
-
+    u.start_time()
     f = g.degree_distribution(bin_width=1)
     xs, ys = zip(*[(left, count) for left, _, count in
                    g.degree_distribution().bins()])
@@ -67,9 +74,11 @@ def degree_distribution_plot(g: Graph, filename='degree_distribution', loglog=Tr
     pylab.xlabel('k')
     pylab.ylabel('N')
     pylab.title('Degree distribution')
-    # pylab.plot(xs, ys, marker)
-    pylab.plot(f.keys(), f.values(), marker)
-    pylab.savefig(filename + '.png')
+    pylab.plot(xs, ys, marker)
+    # pylab.plot(f.keys(), f.values(), marker)
+    filename = folder_img + filename + img_suffix
+    pylab.savefig(filename)
+    u.print_delta(' generate  degree_distribution_plot')
 
 
 def degree_properties(g: Graph):
@@ -110,7 +119,15 @@ def in_giant(g: Graph):
     return largest
 
 
+def in_giant_alt(G: Graph):
+    cl = G.components().giant()
+    cl_sizes = cl.sizes()
+    giant_component_index = cl_sizes.index(max(cl_sizes))
+    return [x == giant_component_index for x in cl.membership]
+
+
 def global_metrics(g: Graph):
+    u.start_time()
     summary(g)
     print("GLOBAL MEASUURES")
     print("Connected:", g.is_connected())
@@ -120,13 +137,15 @@ def global_metrics(g: Graph):
     print("Average Local Clustering Coefficient:", g.transitivity_avglocal_undirected())
     print("Average Degree:", mean(g.degree()))
     print("Max Degree:", g.maxdegree())
-    print("Average Betweenness:", mean(g.betweenness()))
-    print("Max Betweenness:", max(g.betweenness()))
-    print("Average Closeness:", mean(g.closeness()))
-    print("Max Closeness:", max(g.closeness()))
+    # print("Average Betweenness:", mean(g.betweenness()))
+    # print("Max Betweenness:", max(g.betweenness()))
+    # print("Average Closeness:", mean(g.closeness()))
+    # print("Max Closeness:", max(g.closeness()))
+    u.print_delta("get global metrics ")
 
 
 def local_metrics(g: Graph):
+    u.start_time()
     if "name" not in g.vertex_attributes():
         g.vs["name"] = [str(i) for i in range(g.vcount())]
     degrees = g.degree()
@@ -147,3 +166,184 @@ def local_metrics(g: Graph):
     print("Vertex with highest closeness:", g.vs.select(_closeness=max(closeness))['name'])
     if not g.is_directed():
         print("Vertex with highest clustering coefficient:", g.vs[clustering_coef.index(max(clustering_coef))]['name'])
+    u.print_delta("get local metrics ")
+
+
+def viz_graph(g: Graph, in_out, file_name, layout, show_label_by_degree):
+    u.start_time()
+    # Define colors used for outdegree visualization
+    colours = ['#fecc5c', '#a31a1c']
+    outdegree = g.degree(mode=in_out)
+    # Order vertices in bins based on outdegree
+    bins = np.linspace(0, max(outdegree), len(colours))
+    digitized_degrees = np.digitize(outdegree, bins)
+    file_name = folder_img + file_name + img_suffix
+
+    visual_style = {"edge_curved": False
+        , "vertex_size": outdegree * 10  # [x / max(outdegree) * 10 + 5 for x in outdegree]
+        , "vertex_label": [(v["twitter_id"] if (v.degree() >= show_label_by_degree) else None) for v in g.vs]
+        , "target": file_name
+        , "bbox": (1600, 1600)
+        , "margin": 10
+
+                    }
+    # Don't curve the edges
+    # Scale vertices based on degree
+
+    # visual_style["vertex_label"] = g.vs["twitter_id"]
+    # visual_style["target"] = file_name
+    # Set colors according to bins
+    g.vs["color"] = [colours[x - 1] for x in digitized_degrees]
+    # Also color the edges
+    for ind, color in enumerate(g.vs["color"]):
+        edges = g.es.select(_source=ind)
+        edges["color"] = [color]
+
+    # Set bbox and margin
+    # visual_style["bbox"] = (1600, 1600)
+    # visual_style["margin"] = 10
+    # Community detection
+    # communities = geant.community_edge_betweenness(directed=False)
+
+    # communities = geant.community_fastgreedy().as_clustering()
+    # communities = geant.community_infomap().as_clustering()
+    # clusters = communities.as_clustering()
+
+    # Set edge weights based on communities
+    # weights = {v: len(c) for c in clusters for v in c}
+    # geant.es["weight"] = [weights[e.tuple[0]] + weights[e.tuple[1]] for e in geant.es]
+
+    # Choose the layout
+    N = g.vcount()
+    _layout = g.layout(layout)  # drl
+    visual_style["layout"] = _layout
+    # geant.layout_fruchterman_reingold(#weights=geant.es["weight"],
+    #                                                          maxiter=1000, area=N ** 3,
+    #                                                      repulserad=N ** 3)
+
+    # Plot the graph
+    drawing.plot(g, **visual_style)
+    u.print_delta("generate viz graph ")
+
+
+def load_graph(n_rows: int, compressed: bool):
+    u.start_time()
+    file_name: str = './files/twitter_' + u.human_format(n_rows) + '_pickle' + ('z' if compressed else '')
+    print("now loading graph from ", file_name)
+    try:
+        g = Graph.Read_Picklez(fname=file_name)
+
+    except:
+        print("Something goes wrong loading ", file_name)
+        g = None
+    finally:
+        u.print_delta("load graph")
+        return g
+
+
+def plot_frequency_degree_distribution(g: Graph, modeInOutAll, file_name: str):
+    # from  https://stackoverflow.com/questions/53958700/plotting-degree-distribution-of-networkx-digraph-using-networkx-degree-histogram
+    from collections import Counter
+    from operator import itemgetter
+
+    # G = some networkx graph
+
+    degrees = g.degree(mode=modeInOutAll)
+    degree_counts = Counter(degrees)
+    x, y = zip(*degree_counts.items())
+
+    plt.figure(1)
+
+    # prep axes
+    plt.xlabel('degree')
+    plt.xscale('log')
+    plt.xlim(1, max(x))
+
+    plt.ylabel('frequency')
+    plt.yscale('log')
+    plt.ylim(1, max(y))
+    # do plot
+    plt.scatter(x, y, marker='.')
+    plt.show()
+
+
+def plot_histo_degree_distribution(g: Graph, modeInOutAll, isLog: bool, file_name: str):
+    b = g.degree_distribution(bin_width=1)
+    # print('degree histogram', b)
+    a = []
+    a = g.degree(mode=modeInOutAll)
+    rect = plt.hist(a, bins=range(0, (max(a))), normed=1, stacked='True', facecolor='b')
+    plt.xlabel('Number of Nodes')
+    plt.ylabel('Degree')
+    if (isLog):
+        plt.xscale('log')
+        plt.yscale('log')
+    plt.title('Degree Distribution')
+    #
+    print('figure is saved ')
+    file_name = folder_img + file_name + img_suffix
+    plt.savefig(file_name)
+    plt.show()
+
+
+def autolabel(rects):
+    for rect in rects:
+        height = rect.get_height()
+        plt.text(rect.get_x() + rect.get_width() / 2., 1.04 * height, '%s' % float(height))
+
+
+def plot_components_distribution(cl_list: VertexClustering, file_name: str):
+    cl_sizes = cl_list.sizes()
+    data = sorted(cl_sizes, reverse=True)
+    plt.xlabel('Number of Nodes')
+    plt.ylabel('Cluster')
+    plt.title('Components Distribution')
+    rect = plt.bar(range(len(data)), data, color='red')
+    autolabel(rect)
+    print('figure is saved ')
+    file_name = folder_img + file_name + img_suffix
+    plt.savefig(file_name)
+    plt.show()
+
+
+def set_color_from_communities(g, communities):
+    pal = drawing.colors.ClusterColoringPalette(len(communities))
+    g.vs['color'] = pal.get_many(communities.membership)
+
+
+def get_max_vertex(g: Graph, mode_in_out_all):
+    # degree OUT
+    u.start_time()
+    degrees = g.degree(mode=mode_in_out_all)  # .vs.degree(mode=igraph.OUT)
+    max_deg = max(degrees)
+    print('found max degree OUT : ', max_deg)
+    df_degree_out = [g.vs[idx] for idx, eb in enumerate(degrees) if eb == max_deg]
+    print('out max degree id : ', df_degree_out[0]["name"], ' twitter_id : ', df_degree_out[0]["twitter_id"],
+          ' degree : ', max_deg)
+    u.print_delta("get max  degree ")
+    return u.get_twitter_profile(df_degree_out[0]["twitter_id"])
+
+
+# eg.dist <- degree_distribution(net, cumulative=T, mode="all") plot( x=0:max(deg), y=1-deg.dist, pch=19, cex=1.2, col="orange",
+#      xlab="Degree", ylab="Cumulative Frequency")
+
+
+def get_top_n_for_list(g: Graph, result_list, top_n: int):
+    top = sorted(zip(g.vs, result_list), reverse=True)[:top_n]
+    print([node["twitter_id"] for node,_ in top])
+
+    return top
+
+
+def get_top_n_for_page_rank(g: Graph, directed: bool, top_n: int):
+    u.start_time()
+    top = get_top_n_for_list(g, g.pagerank(directed=directed), top_n)
+    u.print_delta('get top '+ str(top_n)+ '  PageRank ')
+    return top
+
+
+def get_top_n_for_degree(g: Graph, mode_in_out_all, top_n: int):
+    u.start_time()
+    top = get_top_n_for_list(g, g.degree(mode=mode_in_out_all), top_n)
+    u.print_delta('get top '+ str(top_n)+ '  Degree ')
+    return top
