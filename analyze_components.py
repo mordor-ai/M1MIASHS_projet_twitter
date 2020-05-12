@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 num_nodes: int = 1000000
 
-g = gm.load_graph(num_nodes,True)
+g:Graph = u.load_graph(num_nodes,True)
 if (g):
     print("loaded")
     # récupération des clusters

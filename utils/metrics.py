@@ -226,21 +226,6 @@ def viz_graph(g: Graph, in_out, file_name, layout, show_label_by_degree):
     u.print_delta("generate viz graph ")
 
 
-def load_graph(n_rows: int, compressed: bool):
-    u.start_time()
-    file_name: str = './files/twitter_' + u.human_format(n_rows) + '_pickle' + ('z' if compressed else '')
-    print("now loading graph from ", file_name)
-    try:
-        g = Graph.Read_Picklez(fname=file_name)
-
-    except:
-        print("Something goes wrong loading ", file_name)
-        g = None
-    finally:
-        u.print_delta("load graph")
-        return g
-
-
 def plot_frequency_degree_distribution(g: Graph, modeInOutAll, file_name: str):
     # from  https://stackoverflow.com/questions/53958700/plotting-degree-distribution-of-networkx-digraph-using-networkx-degree-histogram
     from collections import Counter
@@ -347,3 +332,38 @@ def get_top_n_for_degree(g: Graph, mode_in_out_all, top_n: int):
     top = get_top_n_for_list(g, g.degree(mode=mode_in_out_all), top_n)
     u.print_delta('get top '+ str(top_n)+ '  Degree ')
     return top
+
+
+def richclub(graph, fraction=0.1, highest=True, scores=None, indices_only=False):
+    # from http://igraph.wikidot.com/python-recipes#toc6
+    """Extracts the "rich club" of the given graph, i.e. the subgraph spanned
+    between vertices having the top X% of some score.
+
+    Scores are given by the vertex degrees by default.
+
+    @param graph:    the graph to work on
+    @param fraction: the fraction of vertices to extract; must be between 0 and 1.
+    @param highest:  whether to extract the subgraph spanned by the highest or
+                     lowest scores.
+    @param scores:   the scores themselves. C{None} uses the vertex degrees.
+    @param indices_only: whether to return the vertex indices only (and not the
+                         subgraph)
+    """
+
+    if scores is None:
+        scores = graph.degree()
+
+    indices = range(graph.vcount())
+    indices.sort(key=scores.__getitem__)
+
+    n = int(round(graph.vcount() * fraction))
+    if highest:
+        indices = indices[-n:]
+    else:
+        indices = indices[:n]
+
+    if indices_only:
+        return indices
+
+    return graph.subgraph(indices)
+

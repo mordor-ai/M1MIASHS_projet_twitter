@@ -2,49 +2,28 @@ import numpy as np
 import pandas as pd
 import igraph
 import datetime
-import twint
-
-
-def human_format(num):
-    magnitude = 0
-    while abs(num) >= 1000:
-        magnitude += 1
-        num /= 1000.0
-    # add more suffixes if you need them
-    return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+import utils as u
 
 
 n_rows = 10000000
 compressed = True
-tstart = None
-tend = None
 
-
-def start_time():
-    global tstart
-    tstart = datetime.datetime.now()
-
-
-def get_delta():
-    global tstart
-    tend = datetime.datetime.now()
-    return tend - tstart
 
 
 print('====== Profiling results =======')
-start_time()
+u.start_time()
 # load the original graph csv
 df_edges = pd.read_csv(
     "../files/twitter_100M.csv",
     header='infer',
     sep=' ',
-    low_memory=False,
-    dtype={'source': np.int32, 'target': np.int32}
+    low_memory=False
+    #,    dtype={'source': np.int32, 'target': np.int32}
      #,nrows=n_rows
 )
-# on renome les colonnes
-df_edges.columns = ['source', 'target']
-delta1 = get_delta()
+# on renomme les colonnes
+df_edges.columns = ['target', 'source']
+
 print('Time required to load edges: %(delta1)s' % locals())
 start_time()
 
