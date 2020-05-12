@@ -62,24 +62,24 @@ def load_twitter_and_save_pickle_graph(edge_file_name: str, node_file_name: str,
     """
     start_time()
     # load the original graph csv
-    if n_rows>0:
-       df_edges = pd.read_csv(
-        edge_file_name,
-        header='infer',
-        sep=' ',
-        low_memory=False,
-        nrows=n_rows
+    if n_rows > 0:
+        df_edges = pd.read_csv(
+            edge_file_name,
+            header='infer',
+            sep=' ',
+            low_memory=False,
+            nrows=n_rows
         )
-       file_name: str = out_folder + 'twitter_' + human_format(n_rows) + '_pickle' + ('z' if is_compressed else '')
+        file_name: str = out_folder + 'twitter_' + human_format(n_rows) + '_pickle' + ('z' if is_compressed else '')
 
     else:
-       df_edges = pd.read_csv(
-           edge_file_name,
-           header='infer',
-           sep=' ',
-           low_memory=False
-       )
-       file_name: str = out_folder + 'twitter_100M_pickle' + ('z' if is_compressed else '')
+        df_edges = pd.read_csv(
+            edge_file_name,
+            header='infer',
+            sep=' ',
+            low_memory=False
+        )
+        file_name: str = out_folder + 'twitter_100M_pickle' + ('z' if is_compressed else '')
 
     print_delta("load edges")
     # on renomme les colonnes car les données de following sont inversées
@@ -93,7 +93,7 @@ def load_twitter_and_save_pickle_graph(edge_file_name: str, node_file_name: str,
         sep=',',
         low_memory=False,
         dtype={'node_id': np.int32, 'twitter_id': np.int32}
-        ,        index_col='node_id'
+        , index_col='node_id'
     )
 
     print("Dataframe loaded with " + str(len(df_edges)) + "rows.")
@@ -101,25 +101,35 @@ def load_twitter_and_save_pickle_graph(edge_file_name: str, node_file_name: str,
 
     start_time()
     # chargement du graphe
-    g = Graph.TupleList(df_edges.itertuples(index=False), directed=True, weights=False)
-    print_delta("load graph")
-    print("graph loaded")
+    if (n_rows > 0):
+        g = Graph.TupleList(df_edges.itertuples(index=False), directed=True, weights=False)
+        print_delta("load graph")
+        print("graph loaded")
+        print("loading nodes twiter ids")
+        # remplissage des caracteristiques
 
-    print("loading nodes twiter ids")
-    # remplissage des caracteristiques
+        start_time()
 
-    start_time()
+        for v in g.vs:
+            # print(v['name'])
+            index_num = v['name']
+            try:
+                v["twitter_id"] = df_nodes.loc[index_num, 'twitter_id']
 
-    for v in g.vs:
-        # print(v['name'])
-        index_num = v['name']
-        try:
-            v["twitter_id"] = df_nodes.loc[index_num, 'twitter_id']
+            # print(v["twitter_id"])
+            except KeyError:
+                print('not found fo node id : ', index_num)
+            print_delta("add twitter ids")
+    else:
+        g = Graph.DictList(df_nodes.to_dict('records')
+                           , df_edges.to_dict('records')
+                           , directed=True
+                           , vertex_name_attr='node_id'
+                           , edge_foreign_keys=('source', 'target')
+                           # , iterative=False
+                           )
+        print_delta("load graph")
 
-        # print(v["twitter_id"])
-        except KeyError:
-            print('not found fo node id : ', index_num)
-    print_delta("add twitter ids")
     print("now saving graph to ", file_name)
     start_time()
     if is_compressed:
