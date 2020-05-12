@@ -70,6 +70,8 @@ def load_twitter_and_save_pickle_graph(edge_file_name: str, node_file_name: str,
         low_memory=False,
         nrows=n_rows
         )
+       file_name: str = out_folder + 'twitter_' + human_format(n_rows) + '_pickle' + ('z' if is_compressed else '')
+
     else:
        df_edges = pd.read_csv(
            edge_file_name,
@@ -77,6 +79,7 @@ def load_twitter_and_save_pickle_graph(edge_file_name: str, node_file_name: str,
            sep=' ',
            low_memory=False
        )
+       file_name: str = out_folder + 'twitter_100M_pickle' + ('z' if is_compressed else '')
 
     print_delta("load edges")
     # on renomme les colonnes car les données de following sont inversées
@@ -117,8 +120,6 @@ def load_twitter_and_save_pickle_graph(edge_file_name: str, node_file_name: str,
         except KeyError:
             print('not found fo node id : ', index_num)
     print_delta("add twitter ids")
-
-    file_name: str = out_folder + 'twitter_' + human_format(n_rows) + '_pickle' + ('z' if is_compressed else '')
     print("now saving graph to ", file_name)
     start_time()
     if is_compressed:

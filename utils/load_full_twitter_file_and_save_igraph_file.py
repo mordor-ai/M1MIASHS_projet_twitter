@@ -25,7 +25,7 @@ df_edges = pd.read_csv(
 df_edges.columns = ['target', 'source']
 
 print('Time required to load edges: %(delta1)s' % locals())
-start_time()
+u.start_time()
 
 # on charge tout les noeuds
 df_nodes = pd.read_csv(
