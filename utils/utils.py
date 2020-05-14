@@ -8,6 +8,10 @@ tstart = None
 tend = None
 
 
+def str_now():
+    return datetime.datetime.now().strptime("%d-%b-%Y-%H:%M:%S")
+
+
 def start_time():
     global tstart
     tstart = datetime.datetime.now()
@@ -110,14 +114,14 @@ def load_twitter_and_save_pickle_graph(edge_file_name: str, node_file_name: str,
 
         start_time()
         for v in g.vs:
-                # print(v['name'])
-                index_num = v['name']
-                try:
-                    v["twitter_id"] = df_nodes.loc[index_num, 'twitter_id']
+            # print(v['name'])
+            index_num = v['name']
+            try:
+                v["twitter_id"] = df_nodes.loc[index_num, 'twitter_id']
 
-                # print(v["twitter_id"])
-                except KeyError:
-                    print('not found fo node id : ', index_num)
+            # print(v["twitter_id"])
+            except KeyError:
+                print('not found fo node id : ', index_num)
         print_delta("add twitter ids")
     else:
         g = Graph.DictList(df_nodes.to_dict('records')
