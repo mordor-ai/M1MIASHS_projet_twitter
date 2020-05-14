@@ -5,33 +5,38 @@ from utils import plots
 import matplotlib.pyplot as plt
 import seaborn as sns
 num_nodes: int = 10000
-folder_path = "./files/img"
-g:Graph = u.load_graph(num_nodes,True)
+folder_path = "./files/img/"
+g: Graph = u.load_graph (num_nodes, True)
 if (g):
     print("loaded")
     # récupération des clusters
     g_undirected: Graph = g.as_undirected()
     cl = g_undirected.components()
-    cl_sizes = cl.sizes()
-    #g.clusters().giant()
-    #print("nb of components : ", len(cl))
-    #cl =g_undirected.clusters()
-    #cl_sizes = cl.sizes()
-   # print("nb of components : ",len(cl))
+    cl_sizes = cl.sizes ( )
+    # g.clusters().giant()
+    # print("nb of components : ", len(cl))
+    # cl =g_undirected.clusters()
+    # cl_sizes = cl.sizes()
+    # print("nb of components : ",len(cl))
 
-   # gm.get_top_n_for_page_rank(g, False, 10)
-    gm.get_top_n_for_degree(g, ALL, 10)
-    gm.summary(g)
-    #gm.get_max_vertex(g, ALL)
+    # gm.get_top_n_for_page_rank(g, False, 10)
+    print (" first 10 nodes ")
+    gm.get_top_n_for_degree (g, ALL, 10)
+    print (" first 10 IN nodes ")
+    gm.get_top_n_for_degree (g, IN, 10)
+    print (" first 10 OUT nodes ")
+    gm.get_top_n_for_degree (g, OUT, 10)
+    gm.summary (g)
+    # gm.get_max_vertex(g, ALL)
 
-    file_plot: str = 'histo_components_' + u.human_format(num_nodes)
-    plots.plot_histo_components_distribution(cl,file_plot,folder=folder_path)
-    #plt.bar(sorted(cl_sizes, reverse=True))
-    file_plot: str = 'histo_degree_' + u.human_format(num_nodes)
-    plots.plot_histo_degree_distribution(g,ALL,True,file_plot,folder=folder_path)
-    file_plot: str = 'degree_' + u.human_format(num_nodes)
-    plots.plot_plot_degree_distribution(g,filename=file_plot,folder=folder_path)
-    file_plot: str = 'histo_frequency_degree_' + u.human_format(num_nodes)
+    file_plot: str = 'histo_components_' + u.human_format (num_nodes)
+    plots.plot_histo_components_distribution (cl, file_plot, folder=folder_path)
+    # plt.bar(sorted(cl_sizes, reverse=True))
+    file_plot: str = 'histo_degree_' + u.human_format (num_nodes)
+    plots.plot_histo_degree_distribution (g, ALL, True, file_plot, folder=folder_path)
+    file_plot: str = 'degree_' + u.human_format (num_nodes)
+    plots.plot_plot_degree_distribution (g, filename=file_plot, folder=folder_path)
+    file_plot: str = 'scatter_frequency_degree_' + u.human_format (num_nodes)
     plots.plot_scatter_frequency_degree_distribution(g,ALL,file_plot,folder=folder_path)
 
     #g_undirected.component_di

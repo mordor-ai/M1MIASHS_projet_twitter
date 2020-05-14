@@ -9,7 +9,7 @@ tend = None
 
 
 def str_now():
-    return datetime.datetime.now ( ).isoformat (timespec='minutes')
+    return str (datetime.datetime.now ( ))  # datetime.datetime.now().isoformat (timespec='minutes')
 
 
 def start_time():
