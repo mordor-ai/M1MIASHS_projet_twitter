@@ -30,14 +30,14 @@ if (g):
     # gm.get_max_vertex(g, ALL)
 
     file_plot: str = 'histo_components_' + u.human_format (num_nodes)
-    plots.plot_histo_components_distribution (cl, file_plot, folder=folder_path)
+    plots.plot_histo_components_distribution (cl, file_name=file_plot, folder=folder_path)
     # plt.bar(sorted(cl_sizes, reverse=True))
     file_plot: str = 'histo_degree_' + u.human_format (num_nodes)
-    plots.plot_histo_degree_distribution (g, ALL, True, file_plot, folder=folder_path)
+    plots.plot_histo_degree_distribution (g, ALL, True, file_name=file_plot, folder=folder_path)
     file_plot: str = 'degree_' + u.human_format (num_nodes)
-    plots.plot_plot_degree_distribution (g, filename=file_plot, folder=folder_path)
+    plots.plot_plot_degree_distribution (g, file_name=file_plot, folder=folder_path)
     file_plot: str = 'scatter_frequency_degree_' + u.human_format (num_nodes)
-    plots.plot_scatter_frequency_degree_distribution(g,ALL,file_plot,folder=folder_path)
+    plots.plot_scatter_frequency_degree_distribution (g, ALL, file_name=file_plot, folder=folder_path)
 
     #g_undirected.component_di
     # boucle sur les clusters
@@ -54,10 +54,10 @@ if (g):
                                              file_name=file_plot,folder=folder_path)
         #gm.global_metrics(current_sub_graph)
         file_name: str = "graph_"+str(index)+"_"+u.human_format(num_nodes)
-        gm.viz_graph(current_sub_graph, ALL, file_name, "drl", 6)
-        gm.get_max_vertex(current_sub_graph,ALL)
+        gm.viz_graph (current_sub_graph, ALL, file_name, folder_path, "lgl", 6)
+        gm.get_max_vertex (current_sub_graph, ALL)
         gm.get_top_n_for_page_rank(current_sub_graph,False,10)
         gm.get_top_n_for_page_rank(current_sub_graph,False,10)
 else:
     print("error loading")
-    print("=========================== END OF PROGRAM  ===============================")
+print ("=========================== END OF PROGRAM  ===============================")

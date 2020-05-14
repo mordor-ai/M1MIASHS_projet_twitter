@@ -6,10 +6,19 @@ from igraph import *
 
 tstart = None
 tend = None
+folder_img: str = "./files/img/"
+img_suffix: str = ".png"
 
 
 def str_now():
-    return str (datetime.datetime.now ( ))  # datetime.datetime.now().isoformat (timespec='minutes')
+    now = datetime.datetime.now ( )
+    return now.strftime ("%Y-%m-%d %H:%M:%S")
+
+
+# datetime.datetime.strptime(datetime.datetime.now ( ), '%Y-%m-%d HH:MM:SS')  # datetime.datetime.now().isoformat (timespec='minutes')
+
+def format_file(folder: str = folder_img, file_name: str = "", img_suffix: str = img_suffix):
+    return folder + str_now ( ) + "_" + file_name + img_suffix
 
 
 def start_time():

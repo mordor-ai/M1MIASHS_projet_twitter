@@ -146,20 +146,20 @@ def local_metrics(g: Graph):
     u.print_delta("get local metrics ")
 
 
-def viz_graph(g: Graph, in_out, file_name, layout, show_label_by_degree):
-    u.start_time()
+def viz_graph(g: Graph, in_out, file_name, folder, layout, show_label_by_degree):
+    u.start_time ( )
     # Define colors used for outdegree visualization
     colours = ['#fecc5c', '#a31a1c']
-    outdegree = g.degree(mode=in_out)
+    outdegree = g.degree (mode=in_out)
     # Order vertices in bins based on outdegree
-    bins = np.linspace(0, max(outdegree), len(colours))
-    digitized_degrees = np.digitize(outdegree, bins)
-    file_name = folder_img + file_name + img_suffix
+    bins = np.linspace (0, max (outdegree), len (colours))
+    digitized_degrees = np.digitize (outdegree, bins)
+    # file_name = folder_img + file_name + img_suffix
 
     visual_style = {"edge_curved": False
-        , "vertex_size": outdegree * 10  # [x / max(outdegree) * 10 + 5 for x in outdegree]
-        , "vertex_label": [(v["twitter_id"] if (v.degree() >= show_label_by_degree) else None) for v in g.vs]
-        , "target": file_name
+        , "vertex_size": [x / max (outdegree) * 10 + 1 for x in outdegree]  # outdegree * 10  #
+        , "vertex_label": [(v["twitter_id"] if (v.degree ( ) >= show_label_by_degree) else None) for v in g.vs]
+        , "target": u.format_file (folder=folder, file_name=file_name, img_suffix=img_suffix)
         , "bbox": (1600, 1600)
         , "margin": 10
 
