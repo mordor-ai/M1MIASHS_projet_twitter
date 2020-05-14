@@ -9,7 +9,7 @@ tend = None
 
 
 def str_now():
-    return datetime.datetime.now ( ).strptime ("%d-%b-%Y-%H:%M:%S")
+    return datetime.datetime.now ( ).isoformat (timespec='minutes')
 
 
 def start_time():

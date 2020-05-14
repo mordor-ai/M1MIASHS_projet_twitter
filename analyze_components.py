@@ -4,8 +4,8 @@ from utils import metrics as gm
 from utils import plots
 import matplotlib.pyplot as plt
 import seaborn as sns
-num_nodes: int = 1000000
-folder_path="./files/img"
+num_nodes: int = 10000
+folder_path = "./files/img"
 g:Graph = u.load_graph(num_nodes,True)
 if (g):
     print("loaded")
