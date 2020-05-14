@@ -5,12 +5,10 @@ import datetime
 import utils as u
 
 
-n_rows = 10000000
+n_rows = 100000000
 compressed = True
 
 
-
-print('====== Profiling results =======')
 u.start_time()
 # load the original graph csv
 df_edges = pd.read_csv(
@@ -21,10 +19,10 @@ df_edges = pd.read_csv(
     #,    dtype={'source': np.int32, 'target': np.int32}
      #,nrows=n_rows
 )
+u.print_delta("read edge csv")
 # on renomme les colonnes
 df_edges.columns = ['target', 'source']
 
-print('Time required to load edges: %(delta1)s' % locals())
 u.start_time()
 
 # on charge tout les noeuds
@@ -37,16 +35,15 @@ df_nodes = pd.read_csv(
     #, nrows = n_rows
     #,index_col='node_id'
 )
-delta2 = get_delta()
+u.print_delta("read node csv")
 
-print("Dataframe loaded with " + str(len(df_edges)) + "rows.")
-print('Time required to load nodes: %(delta2)s' % locals())
+
+
 print(df_edges.head())
 print(df_nodes.head())
-#print(df_nodes.to_dict('records'))
-#print(df_edges.to_dict('records'))
+
 print("Now loading graph")
-start_time()
+u.start_time()
 # chargement du graphe
 g = igraph.Graph.DictList(df_nodes.to_dict('records')
                           , df_edges.to_dict('records')
@@ -55,15 +52,15 @@ g = igraph.Graph.DictList(df_nodes.to_dict('records')
                           , edge_foreign_keys=('source', 'target')
                           #, iterative=False
                           )
-delta2 = get_delta()
-print("graph loaded")
-print('Time required to load graph: %(delta2)s' % locals())
+
+
+u.print_delta("load graph")
 print("loading graph summary")
 
-start_time()
-igraph.summary(g)
-delta1 = get_delta()
-print('Time required to get summary graph: %(delta1)s' % locals())
+#u.start_time()
+#igraph.summary(g)
+#u.print_delta("to get summary graph")
+#print('Time required to get summary graph: %(delta1)s' % locals())
 
 # start_time()
 # degrees_in = g.degree(mode="in")
@@ -89,15 +86,13 @@ print('Time required to get summary graph: %(delta1)s' % locals())
 
 
 
-file_name: str = '../files/twitter_' + human_format(n_rows) + '_pickle'+  ('z' if compressed else '')
+file_name: str = '../files/TEST_twitter_' + u.human_format(n_rows) + '_pickle'+  ('z' if compressed else '')
 print("now saving graph to ", file_name)
-start_time()
+u.start_time()
 if compressed:
     g.write_picklez(file_name)
 else:
     g.write_pickle(file_name)
-print("graph saved")
-delta4 = get_delta()
-print("Time required to save pickle file: %(delta4)s" % locals())
+u.print_delta("save the graph")
 print("====== End of program =======")
 

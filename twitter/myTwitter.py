@@ -85,7 +85,7 @@ def main(argv = None){
     if args.import_profiles_into_neo4j:
         import_profiles_into_neo4j()
     return
-}x
+}
 
 
 

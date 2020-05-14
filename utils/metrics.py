@@ -52,33 +52,10 @@ def degree_distribution(g: Graph):
     return distribution
 
 
-def plot_degree_distribution(g: Graph):
-    plt.figure()
-    plt.hist(g.degree())
-    plt.xlabel("Degree")
-    plt.ylabel("#Vertices")
-    plt.show()
 
 
-def degree_distribution_plot(g: Graph, filename='degree_distribution', loglog=True, marker='.'):
-    import pylab
-    u.start_time()
-    f = g.degree_distribution(bin_width=1)
-    xs, ys = zip(*[(left, count) for left, _, count in
-                   g.degree_distribution().bins()])
-    # pylab.bar(xs, ys)
-    pylab.show()
-    if loglog:
-        pylab.xscale('log')
-        pylab.yscale('log')
-    pylab.xlabel('k')
-    pylab.ylabel('N')
-    pylab.title('Degree distribution')
-    pylab.plot(xs, ys, marker)
-    # pylab.plot(f.keys(), f.values(), marker)
-    filename = folder_img + filename + img_suffix
-    pylab.savefig(filename)
-    u.print_delta(' generate  degree_distribution_plot')
+
+
 
 
 def degree_properties(g: Graph):
@@ -129,7 +106,7 @@ def in_giant_alt(G: Graph):
 def global_metrics(g: Graph):
     u.start_time()
     summary(g)
-    print("GLOBAL MEASUURES")
+    print("GLOBAL MEASURES")
     print("Connected:", g.is_connected())
     print("Density:", g.density())
     print("Diameter:", g.diameter())
@@ -226,70 +203,6 @@ def viz_graph(g: Graph, in_out, file_name, layout, show_label_by_degree):
     u.print_delta("generate viz graph ")
 
 
-def plot_frequency_degree_distribution(g: Graph, modeInOutAll, file_name: str):
-    # from  https://stackoverflow.com/questions/53958700/plotting-degree-distribution-of-networkx-digraph-using-networkx-degree-histogram
-    from collections import Counter
-    from operator import itemgetter
-
-    # G = some networkx graph
-
-    degrees = g.degree(mode=modeInOutAll)
-    degree_counts = Counter(degrees)
-    x, y = zip(*degree_counts.items())
-
-    plt.figure(1)
-
-    # prep axes
-    plt.xlabel('degree')
-    plt.xscale('log')
-    plt.xlim(1, max(x))
-
-    plt.ylabel('frequency')
-    plt.yscale('log')
-    plt.ylim(1, max(y))
-    # do plot
-    plt.scatter(x, y, marker='.')
-    plt.show()
-
-
-def plot_histo_degree_distribution(g: Graph, modeInOutAll, isLog: bool, file_name: str):
-    b = g.degree_distribution(bin_width=1)
-    # print('degree histogram', b)
-    a = []
-    a = g.degree(mode=modeInOutAll)
-    rect = plt.hist(a, bins=range(0, (max(a))), normed=1, stacked='True', facecolor='b')
-    plt.xlabel('Number of Nodes')
-    plt.ylabel('Degree')
-    if (isLog):
-        plt.xscale('log')
-        plt.yscale('log')
-    plt.title('Degree Distribution')
-    #
-    print('figure is saved ')
-    file_name = folder_img + file_name + img_suffix
-    plt.savefig(file_name)
-    plt.show()
-
-
-def autolabel(rects):
-    for rect in rects:
-        height = rect.get_height()
-        plt.text(rect.get_x() + rect.get_width() / 2., 1.04 * height, '%s' % float(height))
-
-
-def plot_components_distribution(cl_list: VertexClustering, file_name: str):
-    cl_sizes = cl_list.sizes()
-    data = sorted(cl_sizes, reverse=True)
-    plt.xlabel('Number of Nodes')
-    plt.ylabel('Cluster')
-    plt.title('Components Distribution')
-    rect = plt.bar(range(len(data)), data, color='red')
-    autolabel(rect)
-    print('figure is saved ')
-    file_name = folder_img + file_name + img_suffix
-    plt.savefig(file_name)
-    plt.show()
-
 
 def set_color_from_communities(g, communities):
     pal = drawing.colors.ClusterColoringPalette(len(communities))
@@ -366,4 +279,5 @@ def richclub(graph, fraction=0.1, highest=True, scores=None, indices_only=False)
         return indices
 
     return graph.subgraph(indices)
+
 

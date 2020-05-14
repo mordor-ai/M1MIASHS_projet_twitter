@@ -109,17 +109,16 @@ def load_twitter_and_save_pickle_graph(edge_file_name: str, node_file_name: str,
         # remplissage des caracteristiques
 
         start_time()
-
         for v in g.vs:
-            # print(v['name'])
-            index_num = v['name']
-            try:
-                v["twitter_id"] = df_nodes.loc[index_num, 'twitter_id']
+                # print(v['name'])
+                index_num = v['name']
+                try:
+                    v["twitter_id"] = df_nodes.loc[index_num, 'twitter_id']
 
-            # print(v["twitter_id"])
-            except KeyError:
-                print('not found fo node id : ', index_num)
-            print_delta("add twitter ids")
+                # print(v["twitter_id"])
+                except KeyError:
+                    print('not found fo node id : ', index_num)
+        print_delta("add twitter ids")
     else:
         g = Graph.DictList(df_nodes.to_dict('records')
                            , df_edges.to_dict('records')
