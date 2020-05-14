@@ -110,7 +110,8 @@ def global_metrics(g: Graph):
     # print("Max Betweenness:", max(g.betweenness()))
     # print("Average Closeness:", mean(g.closeness()))
     # print("Max Closeness:", max(g.closeness()))
-    #  print("mean distance directed", g.v)
+    print ("mean distance directed", g.average_path_length (g.is_directed ( )))
+    print ("mean distance un-directed", g.average_path_length (directed=False))
     u.print_delta ("get global metrics ")
 
 
