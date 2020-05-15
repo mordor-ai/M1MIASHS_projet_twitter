@@ -22,10 +22,14 @@ def viz_graph(g: Graph, degree, file_name: str, folder: str, layout: str = "auto
     colours = ['#fecc5c', '#a31a1c']
 
     max_degree = max (degree)
-    num_colors = max_degree + 1
-    # https://github.com/igraph/python-igraph/issues/98
-    palette = RainbowPalette (n=num_colors, start=0, end=1, alpha=0.75)
-    color_list = [palette.get (d if d > 1 else int (1 + d)) for d in degree]
+    if type (max_degree) == int:
+        if max_degree >= 1:
+            num_colors = (max_degree) + 1
+            # https://github.com/igraph/python-igraph/issues/98
+            palette = RainbowPalette (n=num_colors)
+            color_list = [palette.get (d) for d in degree]
+            # Set colors according to bins
+            g.vs["color"] = color_list  # [colours[x - 1] for x in digitized_degrees]
 
     # Order vertices in bins based on outdegree
     bins = np.linspace (0, max_degree, len (colours))
@@ -49,8 +53,7 @@ def viz_graph(g: Graph, degree, file_name: str, folder: str, layout: str = "auto
         , "layout": my_layout
 
     }
-    # Set colors according to bins
-    g.vs["color"] = color_list  #[colours[x - 1] for x in digitized_degrees]
+
     # Also color the edges
     for ind, color in enumerate (g.vs["color"]):
         edges = g.es.select (_source=ind)

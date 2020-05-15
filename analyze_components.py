@@ -89,10 +89,6 @@ if g:
         file_plot: str = 'histo_degree_' + u.human_format (num_nodes) + '_' + str (index)
         plots.plot_histo_degree_distribution (g=current_sub_graph, modeInOutAll=ALL, isLog=True,
                                               file_name=file_plot, folder=folder_path)
-        # gm.global_metrics(current_sub_graph)
-        file_name: str = "graph_" + str (index) + "_" + u.human_format (num_nodes)
-        # kk, lgl, drl
-        viz.viz_graph (current_sub_graph, ALL, file_name, folder_path, "auto", 0.1)
 
         file_name: str = "graph_" + str (index) + "_degree_all_" + u.human_format (num_nodes)
         # kk, lgl, drl
