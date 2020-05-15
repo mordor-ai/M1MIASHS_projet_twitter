@@ -34,7 +34,7 @@ def get_delta():
 
 def print_delta(myText: object) -> object:
     delta1 = get_delta ( )
-    print ('Time required to process {p}: {t}s'.format (p=myText, t=delta1, local=locals ( )))
+   # print ('Time required to process {p}: {t}s'.format (p=myText, t=delta1, local=locals ( )))
     return delta1
 
 
@@ -47,30 +47,76 @@ def human_format(num):
     return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
 
 
-def fill_vertex(v: Vertex):
+def fill_vertex_seq(g: Graph):
+    for v in g.vs:
+        fill_vertex (v[0])
+
+
+def fill_empty_vertex(v):
+    v["twitter_name"] = ""
+    v['username'] = ""
+    v['bio'] = ""
+    v['url'] = ""
+    v['join_datetime'] = ""
+    v['join_date'] = ""
+    v['join_time'] = ""
+    v['tweets'] = ""
+    v['location'] = ""
+    v['following'] = ""
+    v['followers'] = ""
+    v['likes'] = ""
+    v['media'] = ""
+    v['private'] = ""
+    v['verified'] = ""
+    v['avatar'] = ""
+    v['background_image'] = ""
+
+
+def fill_vertex(v):
     # 'name' 'username' 'bio' 'url' 'join_datetime' 'join_date'
     # 'join_time' 'tweets' 'location' 'following' 'followers' 'likes' 'media'
     # 'private' 'verified' 'avatar' 'background_image'
-
-    df = get_twitter_profile (v["twitter_id"])
-    if df:
-        v["twitter_name"] = df.loc[0, "name"]
-        v['username'] = df.loc[0, "username"]
-        v['bio'] = df.loc[0, "bio"]
-        v['url'] = df.loc[0, "url"]
-        v['join_datetime'] = df.loc[0, "join_datetime"]
-        v['join_date'] = df.loc[0, "join_date"]
-        v['join_time'] = df.loc[0, "join_time"]
-        v['tweets'] = df.loc[0, "tweets"]
-        v['location'] = df.loc[0, "location"]
-        v['following'] = df.loc[0, "following"]
-        v['followers'] = df.loc[0, "followers"]
-        v['likes'] = df.loc[0, "likes"]
-        v['media'] = df.loc[0, "media"]
-        v['private'] = df.loc[0, "private"]
-        v['verified'] = df.loc[0, "verified"]
-        v['avatar'] = df.loc[0, "avatar"]
-        v['background_image'] = df.loc[0, "background_image"]
+    if (v["twitter_name"] is None):
+        fill_empty_vertex (v)
+    if v["twitter_name"] == "":
+        v["twitter_name"] = ""
+        v['username'] = ""
+        v['bio'] = ""
+        v['url'] = ""
+        v['join_datetime'] = ""
+        v['join_date'] = ""
+        v['join_time'] = ""
+        v['tweets'] = ""
+        v['location'] = ""
+        v['following'] = ""
+        v['followers'] = ""
+        v['likes'] = ""
+        v['media'] = ""
+        v['private'] = ""
+        v['verified'] = ""
+        v['avatar'] = ""
+        v['background_image'] = ""
+        df = get_twitter_profile (v["twitter_id"])
+        if df is None:
+            return v
+        if df.empty == False:
+            v["twitter_name"] = df.loc[0, "name"]
+            v['username'] = df.loc[0, "username"]
+            v['bio'] = df.loc[0, "bio"]
+            v['url'] = df.loc[0, "url"]
+            v['join_datetime'] = df.loc[0, "join_datetime"]
+            v['join_date'] = df.loc[0, "join_date"]
+            v['join_time'] = df.loc[0, "join_time"]
+            v['tweets'] = df.loc[0, "tweets"]
+            v['location'] = df.loc[0, "location"]
+            v['following'] = df.loc[0, "following"]
+            v['followers'] = df.loc[0, "followers"]
+            v['likes'] = df.loc[0, "likes"]
+            v['media'] = df.loc[0, "media"]
+            v['private'] = df.loc[0, "private"]
+            v['verified'] = df.loc[0, "verified"]
+            v['avatar'] = df.loc[0, "avatar"]
+            v['background_image'] = df.loc[0, "background_image"]
     return v
 
 
@@ -80,19 +126,20 @@ def get_twitter_profile(twitter_id):
     c.User_id = twitter_id
     c.Limit = 20
     c.Pandas = True
-    # c.Hide_output = True
+    twint.storage.panda.clean ( )
+    c.Hide_output = True
     try:
         twint.run.Lookup (c)
         # twint.run.Profile ( )
         User_df: pd.DataFrame = twint.storage.panda.User_df
-        print (User_df.head ( ))
-        print (User_df.loc[0, "name"])
+        # print (User_df.head ( ))
+        # print (User_df.loc[0, "name"])
         print_delta ("to get  twitter account onto twitter")
 
         return User_df
     except:
         print ("twitter id not found  for id :", twitter_id)
-        return
+        return None
 
 
 def load_twitter_graph(edge_file_name: str,
@@ -130,7 +177,7 @@ def load_twitter_graph(edge_file_name: str,
         node_file_name,
         header='infer',
         sep=',',
-        low_memory=False,
+        low_memory=True,
         dtype={'node_id': np.int32, 'twitter_id': np.int32}
         , index_col='node_id'
     )
@@ -179,13 +226,17 @@ def load_twitter_and_save_pickle_graph(edge_file_name: str,
 
     :type n_rows: object
     """
-
     g = load_twitter_graph (edge_file_name, node_file_name, n_rows)
-    file_name: str = out_folder + 'twitter_' + (human_format (n_rows) if (n_rows > 0) else '100M') + '_pickle' + (
-        'z' if is_compressed else '')
+    fill_vertex_seq (g)
+    file_name: str = 'twitter_' + (human_format (n_rows) if (n_rows > 0) else '100M')
 
-    print ("now saving graph to ", file_name)
+    save_graph (g, file_name, out_folder, is_compressed)
+
+
+def save_graph(g: Graph, file_name: str, folder: str, is_compressed: bool):
+    file_name: str = folder + file_name + '_pickle' + ('z' if is_compressed else '')
     start_time ( )
+    print ("now saving graph to ", file_name)
     if is_compressed:
         g.write_picklez (file_name)
     else:
