@@ -61,13 +61,6 @@ def degree_properties(g: Graph):
     return min_degree, max_degree, mean_degree, std_degree
 
 
-def summary(g: Graph):
-    degree_stats = degree_properties (g)
-    connected = 'connected' if (g.is_connected ( )) else 'unconnected'
-    directed = 'directed' if (g.is_directed ( )) else 'undirected'
-    deg = '(%d, %0.2f ± %0.2f, %d)' % (degree_stats[0], degree_stats[2], degree_stats[3], degree_stats[1])
-    return 'N:%d E:%d %s %s Components:%d Degree:%s' % (
-        g.vcount ( ), g.ecount ( ), connected, directed, len (g.components ( )), deg)
 
 
 def report(g: Graph):
@@ -97,19 +90,28 @@ def in_giant_alt(G: Graph):
 
 def global_metrics(g: Graph):
     u.start_time ( )
+    degree_stats = degree_properties (g)
     summary (g)
-    print ("GLOBAL MEASURES")
+    print ("======= GLOBAL MEASURES ============")
+    print ('Number of nodes: %d' % g.vcount ( ))
+    print ('Number of edges: %d' % g.ecount ( ))
+    print ('Number of components: %d' % len (g.components ( )))
     print ("Connected:", g.is_connected ( ))
     print ("Density:", g.density ( ))
-    print ("Diameter:", g.diameter ( ))
+    print ("Diameter:", g.diameter (directed=g.is_directed ( )))
+    print ("Diameter un-directed:", g.diameter (directed=False))
+
     print ("Clustering Coefficient:", g.transitivity_undirected ( ))
     print ("Average Local Clustering Coefficient:", g.transitivity_avglocal_undirected ( ))
+    print ('Degree: min = %d, max = %d, mean = %0.2f, std = %0.2f' % (
+        degree_stats[0], degree_stats[1], degree_stats[2], degree_stats[3]))
+
     print ("Average Degree:", mean (g.degree ( )))
     print ("Max Degree:", g.maxdegree ( ))
-    # print("Average Betweenness:", mean(g.betweenness()))
-    # print("Max Betweenness:", max(g.betweenness()))
-    # print("Average Closeness:", mean(g.closeness()))
-    # print("Max Closeness:", max(g.closeness()))
+    print ("Average Betweenness:", mean (g.betweenness ( )))
+    print ("Max Betweenness:", max (g.betweenness ( )))
+    print ("Average Closeness:", mean (g.closeness ( )))
+    print ("Max Closeness:", max (g.closeness ( )))
     print ("mean distance directed", g.average_path_length (g.is_directed ( )))
     print ("mean distance un-directed", g.average_path_length (directed=False))
     u.print_delta ("get global metrics ")
@@ -124,20 +126,35 @@ def local_metrics(g: Graph):
     closeness = g.closeness ( )
     if not g.is_directed ( ):
         clustering_coef = g.transitivity_local_undirected ( )
-    print ("LOCAL MEASURES")
-    for i in range (g.vcount ( )):
-        print (g.vs["twitter_id"][i] + ':')
-        print (" Degree:", degrees[i])
-        print (" Betweenness:", betweenness[i])
-        print (" Closeness:", closeness[i])
-        if not g.is_directed ( ):
-            print (" Clustering Coefficient:", clustering_coef[i])
-    print ("Vertex with highest degree:", g.vs.select (_degree=g.maxdegree ( ))['name'])
-    print ("Vertex with highest betweenness:", g.vs.select (_betweenness=max (betweenness))['name'])
-    print ("Vertex with highest closeness:", g.vs.select (_closeness=max (closeness))['name'])
+    print ("==============LOCAL MEASURES=======================")
+    # for i in range (g.vcount ( )):
+    # print (g.vs["twitter_id"][i] + ':')
+    # print (" Degree:", degrees[i])
+    # print (" Betweenness:", betweenness[i])
+    # print (" Closeness:", closeness[i])
+    # if not g.is_directed ( ):
+    #    print (" Clustering Coefficient:", clustering_coef[i])
+    max_v = g.vs.select (_degree=g.maxdegree ( ))
+    tweeter_df = u.get_twitter_profile (max_v['twitter_id'])
+    print ("Vertex with highest degree:", max_v['name'], " , twitter id : ", max_v['twitter_id'],
+           "twitter name=", tweeter_df.loc[0, "name"])
+    max_v = g.vs.select (_betweenness=max (betweenness))
+    tweeter_df = u.get_twitter_profile (max_v['twitter_id'])
+    print ("Vertex with highest betweenness:", max_v['name'], " , twitter id : ", max_v['twitter_id'],
+           "twitter name=", tweeter_df.loc[0, "name"])
+    max_v = g.vs.select (_closeness=max (closeness))
+    tweeter_df = u.get_twitter_profile (max_v['twitter_id'])
+    print ("Vertex with highest closeness:", max_v['name'], " , twitter id : ", max_v['twitter_id'],
+           "twitter name=", tweeter_df.loc[0, "name"])
+    # print ("Vertex with highest betweenness:", g.vs.select (_betweenness=max (betweenness))['name'])
+    # print ("Vertex with highest closeness:", g.vs.select (_closeness=max (closeness))['name'])
     if not g.is_directed ( ):
-        print ("Vertex with highest clustering coefficient:",
-               g.vs[clustering_coef.index (max (clustering_coef))]['name'])
+        max_v = g.vs[clustering_coef.index (max (clustering_coef))]
+        tweeter_df = u.get_twitter_profile (max_v['twitter_id'])
+        print ("Vertex with highest clustering coefficient:", max_v['name'], " , twitter id : ", max_v['twitter_id'],
+               "twitter name=", tweeter_df.loc[0, "name"])
+        # print ("Vertex with highest clustering coefficient:",
+        #       g.vs[clustering_coef.index (max (clustering_coef))]['name'])
     u.print_delta ("get local metrics ")
 
 
@@ -161,7 +178,9 @@ def get_max_vertex(g: Graph, mode_in_out_all):
 def get_top_n_for_list(g: Graph, result_list, top_n: int):
     top = sorted (zip (g.vs, result_list), reverse=True)[:top_n]
     print ([node["twitter_id"] for node, _ in top])
-
+    # fills twitter properties
+    for node in top:
+        node = u.fill_vertex (node)
     return top
 
 

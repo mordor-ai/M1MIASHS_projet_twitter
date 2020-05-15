@@ -47,6 +47,33 @@ def human_format(num):
     return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
 
 
+def fill_vertex(v: Vertex):
+    # 'name' 'username' 'bio' 'url' 'join_datetime' 'join_date'
+    # 'join_time' 'tweets' 'location' 'following' 'followers' 'likes' 'media'
+    # 'private' 'verified' 'avatar' 'background_image'
+
+    df = get_twitter_profile (v["twitter_id"])
+    if df:
+        v["twitter_name"] = df.loc[0, "name"]
+        v['username'] = df.loc[0, "username"]
+        v['bio'] = df.loc[0, "bio"]
+        v['url'] = df.loc[0, "url"]
+        v['join_datetime'] = df.loc[0, "join_datetime"]
+        v['join_date'] = df.loc[0, "join_date"]
+        v['join_time'] = df.loc[0, "join_time"]
+        v['tweets'] = df.loc[0, "tweets"]
+        v['location'] = df.loc[0, "location"]
+        v['following'] = df.loc[0, "following"]
+        v['followers'] = df.loc[0, "followers"]
+        v['likes'] = df.loc[0, "likes"]
+        v['media'] = df.loc[0, "media"]
+        v['private'] = df.loc[0, "private"]
+        v['verified'] = df.loc[0, "verified"]
+        v['avatar'] = df.loc[0, "avatar"]
+        v['background_image'] = df.loc[0, "background_image"]
+    return v
+
+
 def get_twitter_profile(twitter_id):
     start_time ( )
     c = twint.Config ( )
@@ -55,11 +82,13 @@ def get_twitter_profile(twitter_id):
     c.Pandas = True
     # c.Hide_output = True
     try:
-        # twint.run.Lookup(c)
-        twint.run.Profile ( )
-        User_df = twint.storage.panda.User_df
+        twint.run.Lookup (c)
+        # twint.run.Profile ( )
+        User_df: pd.DataFrame = twint.storage.panda.User_df
         print (User_df.head ( ))
+        print (User_df.loc[0, "name"])
         print_delta ("to get  twitter account onto twitter")
+
         return User_df
     except:
         print ("twitter id not found  for id :", twitter_id)
