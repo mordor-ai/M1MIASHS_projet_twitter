@@ -9,7 +9,7 @@ import seaborn as sns
 
 num_nodes: int = 100000
 n_clusters = 3
-folder_path = "./files/img/"
+folder_path = "../files/img/"
 g: Graph = u.load_graph (num_nodes, True)
 if (g):
     print ("loaded")
